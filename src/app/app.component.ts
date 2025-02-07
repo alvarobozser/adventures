@@ -1,13 +1,24 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { MenuComponent } from './components/menu/menu.component';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  imports: [IonApp, IonRouterOutlet, MenuComponent],
+  template: `
+    <ion-app>
+      <app-menu></app-menu>
+      <ion-router-outlet></ion-router-outlet>
+    </ion-app>
+  `
 })
-export class AppComponent {
-  title = 'phaser-ionic-game';
+export class AppComponent { 
+
+  constructor() {
+    ScreenOrientation.lock({
+      orientation: 'landscape'
+    });
+  }
 }
