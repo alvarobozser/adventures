@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonContent, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { IonContent,IonButton, IonIcon} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
-import { play, settings, trophy } from 'ionicons/icons';
+import { arrowBack, play, settings, trophy } from 'ionicons/icons';
+import { NavController } from '@ionic/angular';
+
 
 @Component({
-  selector: 'app-menu',
+  selector: 'app-select',
   standalone: true,
-  imports: [IonContent, IonButton, IonIcon, CommonModule],
+  imports: [IonContent,IonButton, IonIcon,CommonModule],
   styles: [`
     .game-menu {
     width: 100vw;
@@ -67,34 +69,42 @@ import { play, settings, trophy } from 'ionicons/icons';
  }
 
 }
+
+.select{
+    border: 5px solid black;
+    border-radius: 20px;
+}
+
+.back-button {
+  position: absolute;
+  left: 10px; /* Puedes ajustar este valor */
+  top: 10px;  /* Puedes ajustar este valor */
+  z-index: 10; /* Para asegurarte de que esté sobre otros elementos */
+}
   `],
   template: `
     <ion-content>
       <div class="game-menu">
-        <img src="/assets/ttile.webp" alt="" height="250px" width="250px">
-
-        <ion-button class="menu-button" (click)="startGame()">
-          <ion-icon slot="start" name="play"></ion-icon>
-          Comenzar
+        <ion-button (click)="goBack()" class="back-button">
+        <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
         </ion-button>
+        <img src="/assets/ttile.webp" alt="" height="250px" width="250px">
+        <img src="/assets/danteSelect.png" alt="" height="100px" width="100px" (click)="startGame()" class="select">
       </div>
     </ion-content>
   `
 })
-export class MenuComponent {
-  constructor(private router: Router) {
-    addIcons({ play, settings, trophy });
+export class SelectComponent {
+  constructor(private router: Router,private navCtrl: NavController) {
+    addIcons({ play });
   }
 
   startGame() {
-    this.router.navigate(['/select']);
+    this.router.navigate(['/game']);
   }
 
-  openSettings() {
-    this.router.navigate(['/settings']);
+  goBack(){
+    this.navCtrl.back();
   }
 
-  openScores() {
-    this.router.navigate(['/scores']);
-  }
 }
