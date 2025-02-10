@@ -38,6 +38,7 @@ import { play, settings, trophy } from 'ionicons/icons';
   position: relative;
   overflow: hidden;
   transition: all 0.2s;
+  border-radius:30px;
 }
 
 .menu-button::before {
@@ -63,7 +64,7 @@ import { play, settings, trophy } from 'ionicons/icons';
  }
  
  .menu-button {
-   height: clamp(40px, 12vh, 60px);
+   height: clamp(30px, 12vh, 60px);
  }
 
 }
@@ -72,10 +73,8 @@ import { play, settings, trophy } from 'ionicons/icons';
     <ion-content>
       <div class="game-menu">
         <img src="/assets/ttile.webp" alt="" height="250px" width="250px">
-
         <ion-button class="menu-button" (click)="startGame()">
-          <ion-icon slot="start" name="play"></ion-icon>
-          Comenzar
+          <ion-icon slot="start" name="play"></ion-icon>Comenzar
         </ion-button>
       </div>
     </ion-content>

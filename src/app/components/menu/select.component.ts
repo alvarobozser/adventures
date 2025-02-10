@@ -81,6 +81,59 @@ import { NavController } from '@ionic/angular';
   top: 10px;  /* Puedes ajustar este valor */
   z-index: 10; /* Para asegurarte de que esté sobre otros elementos */
 }
+
+.character-container {
+  display: flex;
+  justify-content: flex-end;  /* Alinea los personajes hacia la derecha */
+  gap: 20px;  /* Espacio entre los personajes */
+  overflow-x: auto;  /* Permite desplazarse horizontalmente si es necesario */
+  padding: 10px;
+}
+
+.character-container {
+  display: flex;
+  position: fixed; /* Posiciona el contenedor de forma fija en la pantalla */
+  bottom: 20px; /* A 20px desde el fondo de la pantalla */
+  z-index: 9999; /* Asegura que este contenedor esté por delante de otros elementos */
+  gap: 15px; /* Espacio entre los personajes */
+}
+
+.character-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  height: 200px;
+  max-width: 245px;
+  border: 4px solid black;
+  cursor: pointer; /* Añade un cursor para hacer click */
+}
+
+.character-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.character-info h3 {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.character-info p {
+  font-size: 0.9em;
+  color: #555;
+  line-height: 1.4em;
+}
+
+
+
   `],
   template: `
     <ion-content>
@@ -88,8 +141,24 @@ import { NavController } from '@ionic/angular';
         <ion-button (click)="goBack()" class="back-button">
         <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
         </ion-button>
-        <img src="/assets/ttile.webp" alt="" height="250px" width="250px">
-        <img src="/assets/danteSelect.png" alt="" height="100px" width="100px" (click)="startGame()" class="select">
+        <img src="/assets/ttile.webp" alt="" height="250px" width="250px" style="margin-bottom: 20%;">
+        <div class="character-container">
+        <div class="character-card" (click)="startGame()">
+          <img src="/assets/danteSelect.png" alt="Dante" class="character-image">
+          <div class="character-info">
+            <h3>Dante</h3>
+            <p>Un guerrero legendario con habilidades inigualables. ¡Elige a Dante y empieza tu aventura!</p>
+          </div>
+        </div>
+        <!-- Aquí puedes agregar más personajes en el futuro -->
+        <div class="character-card">
+          <img src="/assets/ttile.webp" alt="Otro Personaje" class="character-image">
+          <div class="character-info">
+            <h3>Otro Personaje</h3>
+            <p>Una descripción breve de otro personaje.</p>
+          </div>
+        </div>
+      </div>
       </div>
     </ion-content>
   `
