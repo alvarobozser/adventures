@@ -24,50 +24,50 @@ import { play, settings, trophy } from 'ionicons/icons';
     box-sizing: border-box;
     }
 
-@keyframes jumpInfinite {
- 0%, 100% { transform: translateY(0); }
- 50% { transform: translateY(-15px); }
-}
-.menu-button {
-  width: clamp(200px, 30vw, 280px);
-  height: clamp(50px, 8vh, 70px);
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 12px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s;
-  border-radius:30px;
-}
+    @keyframes jumpInfinite {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+    }
+    .menu-button {
+      width: clamp(200px, 30vw, 280px);
+      height: clamp(50px, 8vh, 70px);
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      border-radius:30px;
+    }
 
-.menu-button::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  height: 50%;
-  background: linear-gradient(rgba(255,255,255,0.2), transparent);
-  border-radius: 8px 8px 0 0;
-}
+    .menu-button::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      height: 50%;
+      background: linear-gradient(rgba(255,255,255,0.2), transparent);
+      border-radius: 8px 8px 0 0;
+    }
 
-.menu-button ion-icon {
-  font-size: clamp(20px, 3vw, 24px);
-  margin-right: 10px;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
-}
+    .menu-button ion-icon {
+      font-size: clamp(20px, 3vw, 24px);
+      margin-right: 10px;
+      filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+    }
 
-@media (orientation: landscape) and (max-height: 500px) {
- .menu-title {
-   font-size: clamp(1.5rem, 4vh, 3rem);
- }
- 
- .menu-button {
-   height: clamp(30px, 12vh, 60px);
- }
+    @media (orientation: landscape) and (max-height: 500px) {
+    .menu-title {
+      font-size: clamp(1.5rem, 4vh, 3rem);
+    }
+    
+    .menu-button {
+      height: clamp(30px, 12vh, 60px);
+    }
 
-}
+    }
   `],
   template: `
     <ion-content>
@@ -87,13 +87,5 @@ export class MenuComponent {
 
   startGame() {
     this.router.navigate(['/select']);
-  }
-
-  openSettings() {
-    this.router.navigate(['/settings']);
-  }
-
-  openScores() {
-    this.router.navigate(['/scores']);
   }
 }

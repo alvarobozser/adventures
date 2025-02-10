@@ -1,139 +1,136 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { IonContent,IonButton, IonIcon} from '@ionic/angular/standalone';
+import { IonContent, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
-import { arrowBack, play, settings, trophy } from 'ionicons/icons';
+import { play } from 'ionicons/icons';
 import { NavController } from '@ionic/angular';
 
 
 @Component({
   selector: 'app-select',
   standalone: true,
-  imports: [IonContent,IonButton, IonIcon,CommonModule],
+  imports: [IonContent, IonButton, IonIcon, CommonModule],
   styles: [`
-    .game-menu {
-    width: 100vw;
-    height: 100vh;
-    background: url('/assets/backmenu.webp') no-repeat center/cover;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: clamp(15px, 3vh, 30px);
-    overflow: hidden;
-    padding: clamp(10px, 2vw, 20px);
-    box-sizing: border-box;
-    }
+      .game-menu {
+      width: 100vw;
+      height: 100vh;
+      background: url('/assets/backmenu.webp') no-repeat center/cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(15px, 3vh, 30px);
+      overflow: hidden;
+      padding: clamp(10px, 2vw, 20px);
+      box-sizing: border-box;
+      }
 
-@keyframes jumpInfinite {
- 0%, 100% { transform: translateY(0); }
- 50% { transform: translateY(-15px); }
-}
-.menu-button {
-  width: clamp(200px, 30vw, 280px);
-  height: clamp(50px, 8vh, 70px);
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin: 12px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s;
-}
+      @keyframes jumpInfinite {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+      }
+      .menu-button {
+        width: clamp(200px, 30vw, 280px);
+        height: clamp(50px, 8vh, 70px);
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 12px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.2s;
+      }
 
-.menu-button::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  height: 50%;
-  background: linear-gradient(rgba(255,255,255,0.2), transparent);
-  border-radius: 8px 8px 0 0;
-}
+      .menu-button::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        height: 50%;
+        background: linear-gradient(rgba(255,255,255,0.2), transparent);
+        border-radius: 8px 8px 0 0;
+      }
 
-.menu-button ion-icon {
-  font-size: clamp(20px, 3vw, 24px);
-  margin-right: 10px;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
-}
+      .menu-button ion-icon {
+        font-size: clamp(20px, 3vw, 24px);
+        margin-right: 10px;
+        filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+      }
 
-@media (orientation: landscape) and (max-height: 500px) {
- .menu-title {
-   font-size: clamp(1.5rem, 4vh, 3rem);
- }
- 
- .menu-button {
-   height: clamp(40px, 12vh, 60px);
- }
+      @media (orientation: landscape) and (max-height: 500px) {
+      .menu-title {
+        font-size: clamp(1.5rem, 4vh, 3rem);
+      }
+      
+      .menu-button {
+        height: clamp(40px, 12vh, 60px);
+      }
 
-}
+      }
 
-.select{
-    border: 5px solid black;
-    border-radius: 20px;
-}
+      .select{
+          border: 5px solid black;
+          border-radius: 20px;
+      }
 
-.back-button {
-  position: absolute;
-  left: 10px; /* Puedes ajustar este valor */
-  top: 10px;  /* Puedes ajustar este valor */
-  z-index: 10; /* Para asegurarte de que esté sobre otros elementos */
-}
+      .back-button {
+        position: absolute;
+        left: 10px; 
+        top: 10px;  
+        z-index: 10; 
+      }
 
-.character-container {
-  display: flex;
-  justify-content: flex-end;  /* Alinea los personajes hacia la derecha */
-  gap: 20px;  /* Espacio entre los personajes */
-  overflow-x: auto;  /* Permite desplazarse horizontalmente si es necesario */
-  padding: 10px;
-}
+      .character-container {
+        display: flex;
+        justify-content: flex-end;  
+        gap: 20px; 
+        overflow-x: auto;  
+        padding: 10px;
+      }
 
-.character-container {
-  display: flex;
-  position: fixed; /* Posiciona el contenedor de forma fija en la pantalla */
-  bottom: 20px; /* A 20px desde el fondo de la pantalla */
-  z-index: 9999; /* Asegura que este contenedor esté por delante de otros elementos */
-  gap: 15px; /* Espacio entre los personajes */
-}
+      .character-container {
+        display: flex;
+        position: fixed;
+        bottom: 20px; 
+        z-index: 9999; 
+        gap: 15px; 
+      }
 
-.character-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  height: 200px;
-  max-width: 245px;
-  border: 4px solid black;
-  cursor: pointer; /* Añade un cursor para hacer click */
-}
+      .character-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        height: 200px;
+        max-width: 245px;
+        border: 4px solid black;
+        cursor: pointer;
+      }
 
-.character-image {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 10px;
-}
+      .character-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+      }
 
-.character-info h3 {
-  font-size: 1.2em;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
+      .character-info h3 {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
 
-.character-info p {
-  font-size: 0.9em;
-  color: #555;
-  line-height: 1.4em;
-}
-
-
-
+      .character-info p {
+        font-size: 0.9em;
+        color: #555;
+        line-height: 1.4em;
+      }
   `],
   template: `
     <ion-content>
@@ -147,10 +144,9 @@ import { NavController } from '@ionic/angular';
           <img src="/assets/danteSelect.png" alt="Dante" class="character-image">
           <div class="character-info">
             <h3>Dante</h3>
-            <p>Un guerrero legendario con habilidades inigualables. ¡Elige a Dante y empieza tu aventura!</p>
+            <p>Un guerrero perruno con habilidades inigualables. ¡Elige a Dante y empieza tu aventura!</p>
           </div>
         </div>
-        <!-- Aquí puedes agregar más personajes en el futuro -->
         <div class="character-card">
           <img src="/assets/ttile.webp" alt="Otro Personaje" class="character-image">
           <div class="character-info">
@@ -164,7 +160,7 @@ import { NavController } from '@ionic/angular';
   `
 })
 export class SelectComponent {
-  constructor(private router: Router,private navCtrl: NavController) {
+  constructor(private router: Router, private navCtrl: NavController) {
     addIcons({ play });
   }
 
@@ -172,7 +168,7 @@ export class SelectComponent {
     this.router.navigate(['/game']);
   }
 
-  goBack(){
+  goBack() {
     this.navCtrl.back();
   }
 

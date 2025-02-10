@@ -1,6 +1,11 @@
 // game.component.ts
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { IonContent, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { NavController } from '@ionic/angular';
 import Phaser from 'phaser';
+import { addIcons } from 'ionicons';
+import { play } from 'ionicons/icons';
 
 class GameScene extends Phaser.Scene {
   private dog!: Phaser.GameObjects.Sprite;
@@ -13,11 +18,11 @@ class GameScene extends Phaser.Scene {
   private score: number = 0;
   private scoreText!: Phaser.GameObjects.Text;
   private tokensBeingCollected!: Set<Phaser.Physics.Arcade.Sprite>;
-
+  private deathY: number = 0;
 
   private isJoystickActive: boolean = false;
   private isJumping: boolean = false;
-  private readonly JOYSTICK_RADIUS = 50;
+  private readonly JOYSTICK_RADIUS = 30;
   private readonly MAX_SPEED = 5;
   private readonly MIN_SPEED = 2;
   private readonly JUMP_FORCE = -200;
@@ -36,36 +41,13 @@ class GameScene extends Phaser.Scene {
     this.load.image('tiles', 'assets/tiles.png');
     this.load.image('token', 'assets/token.png');
     this.load.tilemapTiledJSON('map', 'assets/level.json');
-
   }
 
   create(): void {
-
     const uiLayer = this.add.container(0, 0);
     uiLayer.setScrollFactor(0);
+    this.textInicializer();
 
-    // Inicializar el texto del puntaje con estilo Mario
-    this.scoreText = this.add.text(16, 16, 'Bones: 0', {
-      fontSize: '32px',
-      fontFamily: 'Comic Sans MS', // Cambia por "Press Start 2P" si tienes una fuente más arcade
-      color: '#FFD700', // Amarillo dorado estilo Mario
-      stroke: '#D40000', // Contorno rojo intenso
-      strokeThickness: 8, // Más grueso para destacar mejor
-      shadow: { color: '#000000', fill: true, offsetX: 3, offsetY: 3, blur: 3 }
-    }).setScrollFactor(0).setDepth(100);
-
-    // Animación de brillo/pulso sutil
-    this.tweens.add({
-      targets: this.scoreText,
-      alpha: 0.8,
-      yoyo: true,
-      repeat: -1,
-      duration: 800,
-      ease: 'Sine.easeInOut'
-    });
-
-    this.scoreText.setScrollFactor(0); // Fijar a la pantalla
-    this.scoreText.setDepth(100); // Asegurar que está por encima de otros elementos
 
     const background = this.add.image(0, 0, 'background')
       .setOrigin(0, 0)
@@ -84,12 +66,11 @@ class GameScene extends Phaser.Scene {
       allowGravity: false,
       immovable: true
     });
-
+    this.deathY = map.heightInPixels + 100;
 
     const tileset = map.addTilesetImage('tiles', 'tiles');
     const layer = map.createLayer('toplayer', tileset!, 0, 33);
     const tokensLayer = map.getObjectLayer('tokens');
-
     layer!.setCollisionByExclusion([-1]); // Esto hace que todos los tiles excepto el vacío (-1) sean sólidos
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -109,44 +90,39 @@ class GameScene extends Phaser.Scene {
     dogBody.setSize(64, 64); // Ajusta estos valores según necesites
     dogBody.setOffset(5, 5);
 
-    dogBody.setCollideWorldBounds(true);
-
     dogBody.setBounce(0); // Sin rebote
     dogBody.setFriction(1, 0); // Fricción horizontal, vertical
 
     // Añadir el collider y hacerlo más restrictivo
     this.physics.add.collider(this.dog, layer!, undefined, undefined, this);
 
+    this.createAnimations();
+    this.tokensCreate(tokensLayer);
 
 
-    // Animaciones
-    this.anims.create({
-      key: 'walk',
-      frames: [
-        { key: 'dog-idle' },
-        { key: 'dog-walk' }
-      ],
-      frameRate: 8,
-      repeat: -1
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.startFollow(this.dog, true, 0.08, 0.08); // Los números son el lerp (suavizado)
+    this.cameras.main.setDeadzone(100, 100);
+
+    this.createJoystick();
+    this.createJumpButton();
+    this.joystickEvent();
+
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     });
 
-    this.anims.create({
-      key: 'jump',
-      frames: [
-        { key: 'dog-jump' }
-      ],
-      frameRate: 1,
-      repeat: 0
-    });
+  }
 
 
+  private tokensCreate(tokensLayer: any) {
     if (tokensLayer && tokensLayer.objects) {
-      tokensLayer.objects.forEach(obj => {
+      tokensLayer.objects.forEach((obj: { x: number | undefined; y: number | undefined; }) => {
         if (obj.x !== undefined && obj.y !== undefined) {
           const token = this.physics.add.sprite(obj.x, obj.y, 'token');
 
           // Configurar el token para colisiones
-          token.setOrigin(0, 1);
+          token.setOrigin(0, 0);
           token.setSize(token.width, token.height);
           token.setOffset(0, 0);
           token.setImmovable(true);
@@ -175,15 +151,15 @@ class GameScene extends Phaser.Scene {
             console.log('¡Colisión detectada!');
             const token = _obj2 as Phaser.Physics.Arcade.Sprite;
 
-              if (this.tokensBeingCollected.has(token)) {
-                return;
+            if (this.tokensBeingCollected.has(token)) {
+              return;
             }
 
             console.log('¡Colisión detectada!');
-            
+
             // Añadir el token al conjunto de tokens siendo recolectados
             this.tokensBeingCollected.add(token);
-            
+
             // Desactivar la física inmediatamente
             token.body!.enable = false;
 
@@ -197,7 +173,7 @@ class GameScene extends Phaser.Scene {
               onComplete: () => {
                 token.disableBody(true, true);
                 this.score += 1;
-                this.scoreText.setText('Bones: ' + this.score);
+                this.scoreText.setText('hotDogs: ' + this.score);
                 console.log('Puntuación actualizada:', this.score);
 
                 if (this.tokens.countActive() === 0) {
@@ -211,17 +187,9 @@ class GameScene extends Phaser.Scene {
         console.warn('¡El perro no está inicializado!');
       }
     }
+  }
 
-
-    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    this.cameras.main.startFollow(this.dog, true, 0.08, 0.08); // Los números son el lerp (suavizado)
-    this.cameras.main.setDeadzone(100, 100);
-
-    this.createJoystick();
-    this.createJumpButton();
-
-
-
+  private joystickEvent() {
     // Eventos del joystick
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.x < this.cameras.main.width / 2) {
@@ -334,25 +302,70 @@ class GameScene extends Phaser.Scene {
     });
   }
 
+  private createAnimations() {
+    this.anims.create({
+      key: 'walk',
+      frames: [
+        { key: 'dog-idle' },
+        { key: 'dog-walk' }
+      ],
+      frameRate: 8,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: 'jump',
+      frames: [
+        { key: 'dog-jump' }
+      ],
+      frameRate: 1,
+      repeat: 0
+    });
+  }
+
+  private textInicializer() {
+    this.scoreText = this.add.text(16, 16, 'hotDogs: 0', {
+      fontSize: '32px',
+      fontFamily: 'Comic Sans MS', // Cambia por "Press Start 2P" si tienes una fuente más arcade
+      color: '#FFD700', // Amarillo dorado estilo Mario
+      stroke: '#D40000', // Contorno rojo intenso
+      strokeThickness: 8, // Más grueso para destacar mejor
+      shadow: { color: '#000000', fill: true, offsetX: 3, offsetY: 3, blur: 3 }
+    }).setScrollFactor(0).setDepth(100);
+
+    // Animación de brillo/pulso sutil
+    this.tweens.add({
+      targets: this.scoreText,
+      alpha: 0.8,
+      yoyo: true,
+      repeat: -1,
+      duration: 800,
+      ease: 'Sine.easeInOut'
+    });
+    this.scoreText.setPosition(60, 10);
+    this.scoreText.setScrollFactor(0); // Fijar a la pantalla
+    this.scoreText.setDepth(100); // Asegurar que está por encima de otros elementos
+  }
+
 
   private createJoystick(): void {
     const uiLayer = this.add.container(0, 0);
     uiLayer.setScrollFactor(0);
-
-    this.base = this.add.arc(0, 0, this.JOYSTICK_RADIUS, 0, 360, false, 0x000000, 0);
-    this.base.setStrokeStyle(3, 0x888888);
+   
+    this.base = this.add.arc(0, 0, this.JOYSTICK_RADIUS, 0, 360, false, 0x808080, 0.7);
+    this.base.setStrokeStyle(3, 0x4d4d4d);
     this.base.setAlpha(0);
-
-    this.stick = this.add.arc(0, 0, this.JOYSTICK_RADIUS / 2, 0, 360, false, 0x000000, 0);
-    this.stick.setStrokeStyle(3, 0x888888);
+    
+    this.stick = this.add.arc(0, 0, this.JOYSTICK_RADIUS / 2, 0, 360, false, 0x666666, 0.8); 
+    this.stick.setStrokeStyle(3, 0x4d4d4d);
     this.stick.setAlpha(0);
     uiLayer.add(this.base)
-  }
+   }
 
   private createJumpButton(): void {
     // Crear un contenedor para el botón que estará fijo a la cámara
-    const buttonX = this.cameras.main.width - 100;
-    const buttonY = this.cameras.main.height - 100;
+    const buttonX = this.cameras.main.displayWidth * 0.85; // 85% del ancho
+    const buttonY = this.cameras.main.displayHeight * 0.8; // 80% del alto
 
     // Crear el botón
     this.jumpButton = this.add.arc(buttonX, buttonY, 40, 0, 360, false, 0x000000, 0.2);
@@ -440,13 +453,42 @@ class GameScene extends Phaser.Scene {
         }
       }
     }
+
+    if (this.dog.y > this.cameras.main.height + 100) {
+      this.gameOver();
+    }
+  }
+
+  private gameOver(): void {
+    const gameOverText = this.add.text(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      'GAME OVER',
+      {
+        fontSize: '64px',
+        fontFamily: 'Comic Sans MS',
+        color: '#FF0000',
+        stroke: '#000000',
+        strokeThickness: 6
+      }
+    ).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+  
+    this.time.delayedCall(2000, () => {
+      this.scene.restart();
+    });
   }
 }
 
 @Component({
   selector: 'app-game',
   standalone: true,
-  template: `<div id="game"></div>`,
+  imports: [IonButton, IonIcon, CommonModule],
+  template: `
+    <ion-button (click)="goBack()" class="back-button">
+        <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
+        </ion-button>
+    <div id="game"></div>
+  `,
   styles: [`
     #game {
       width: 100vw;
@@ -459,11 +501,20 @@ class GameScene extends Phaser.Scene {
       justify-content: center;
       align-items: center;
     }
+
+    .back-button {
+        position: absolute;
+        left: 10px; 
+        top: 10px;  
+        z-index: 10; 
+    }
   `]
 })
 export class GameComponent implements OnInit, OnDestroy {
   private game!: Phaser.Game;
-
+  constructor(private navCtrl: NavController){
+    addIcons({ play });
+  }
   ngOnInit() {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -476,7 +527,7 @@ export class GameComponent implements OnInit, OnDestroy {
         default: 'arcade',
         arcade: {
           gravity: {
-            y: 300,
+            y: 600,
             x: 0
           },
           debug: false
@@ -485,11 +536,18 @@ export class GameComponent implements OnInit, OnDestroy {
       pixelArt: true,
       scale: {
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        parent: 'game',
       }
     };
 
     this.game = new Phaser.Game(config);
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   ngOnDestroy() {
