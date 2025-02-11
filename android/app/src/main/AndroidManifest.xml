@@ -14,9 +14,12 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:windowSoftInputMode="adjustResize"
+            android:windowTranslucentNavigation="true"
             android:launchMode="singleTask"
             android:exported="true">
-
+            <meta-data android:name="android:windowLayoutInDisplayCutoutMode" 
+               android:value="shortEdges" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

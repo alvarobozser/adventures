@@ -6,6 +6,18 @@ const config: CapacitorConfig = {
   webDir: 'dist/phaser-ionic-game/browser',
   server: {
     androidScheme: 'https'
+  },
+  plugins: {
+    CapacitorStatusBar: {
+      style: 'dark',
+      overlaysWebView: true
+    }
+  },
+  ios: {
+    contentInset: 'always'
+  },
+  android: {
+    backgroundColor: "#000000"
   }
 };
 

@@ -22,6 +22,7 @@ class GameScene extends Phaser.Scene {
   private deathY: number = 0;
   private enemies!: Phaser.Physics.Arcade.Group;
   private isGameOver: boolean = false;
+  private waterLayer?: Phaser.Tilemaps.TilemapLayer;
 
   private isJoystickActive: boolean = false;
   private isJumping: boolean = false;
@@ -35,6 +36,7 @@ class GameScene extends Phaser.Scene {
     this.tokensBeingCollected = new Set();
   }
 
+
   preload(): void {
     this.load.image('background', 'assets/background.jpg');
     this.load.image('dog-idle', 'assets/spritesheets/dante/dantequit.png');
@@ -43,7 +45,7 @@ class GameScene extends Phaser.Scene {
 
     this.load.image('tiles', 'assets/tiles.png');
     this.load.image('token', 'assets/token.png');
-    this.load.image('enemy', 'assets/enemy.png'); 
+    this.load.image('enemy', 'assets/enemy.png');
     this.load.tilemapTiledJSON('map', 'assets/level.json');
   }
 
@@ -56,13 +58,15 @@ class GameScene extends Phaser.Scene {
     const background = this.add.image(0, 0, 'background')
       .setOrigin(0, 0)
       .setDepth(-1)
-      .setScrollFactor(0); // El fondo no se moverá con la cámara
+      .setScrollFactor(0);
 
     // Asegurar que el background cubra toda la pantalla
     const scaleX = this.cameras.main.width / background.width;
     const scaleY = this.cameras.main.height / background.height;
     const scale = Math.max(scaleX, scaleY);
-    background.setScale(scale);
+    background.setScale(scale).setScrollFactor(0);
+    background.x = 0;
+    background.y = 0;
 
     const map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
 
@@ -75,9 +79,12 @@ class GameScene extends Phaser.Scene {
     const tileset = map.addTilesetImage('tiles', 'tiles');
     const layer = map.createLayer('toplayer', tileset!, 0, 33);
     const layer1 = map.createLayer('water', tileset!, 0, 33);
+
+    this.waterStyles(layer1);
+
     const tokensLayer = map.getObjectLayer('tokens');
     layer!.setCollisionByExclusion([-1]); // Esto hace que todos los tiles excepto el vacío (-1) sean sólidos
-    
+
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBoundsCollision(true, true, true, false); // left, right, top, bottom
 
@@ -105,16 +112,16 @@ class GameScene extends Phaser.Scene {
     this.createAnimations();
     this.tokensCreate(tokensLayer);
     this.createEnemies(map);
-    
+
     this.physics.add.collider(this.enemies, layer!);
-    
+
     this.physics.add.collider(
       this.dog,
       this.enemies,
       this.handleEnemyCollision as unknown as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
       undefined,
       this
-  );
+    );
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.dog, true, 0.08, 0.08); // Los números son el lerp (suavizado)
@@ -127,12 +134,69 @@ class GameScene extends Phaser.Scene {
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
       this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     });
-    
+
   }
-  
+
+  private waterStyles(layer1:any){
+    
+    if (layer1) {
+      // Color base más claro y brillante
+      layer1.setTint(0x66ccff);
+
+      // Efecto de olas con alpha
+      this.tweens.add({
+        targets: layer1,
+        alpha: { start: 0.9, to: 1 },
+        duration: 1500,
+        ease: 'Sine.InOut',
+        yoyo: true,
+        repeat: -1
+      });
+
+      // Efecto de "olas" moviendo ligeramente el layer
+      this.tweens.add({
+        targets: layer1,
+        y: '+=2',
+        duration: 2000,
+        ease: 'Sine.InOut',
+        yoyo: true,
+        repeat: -1
+      });
+
+      // Efecto de brillo cambiando el tinte
+      let isFirstTint = true;
+      this.tweens.add({
+        targets: layer1,
+        duration: 3000,
+        repeat: -1,
+        onRepeat: () => {
+          // Alterna entre dos tonos más claros de azul
+          if (isFirstTint) {
+            layer1.setTint(0x99ddff); // Azul más claro
+          } else {
+            layer1.setTint(0x99ddff); // Azul medio claro
+          }
+          isFirstTint = !isFirstTint;
+        }
+      });
+
+      // Efecto adicional de movimiento horizontal suave
+      this.tweens.add({
+        targets: layer1,
+        x: '+=1',
+        duration: 3000,
+        ease: 'Sine.InOut',
+        yoyo: true,
+        repeat: -1
+      });
+    }
+
+
+
+  }
   private handleEnemyCollision(dog: Phaser.GameObjects.GameObject | Phaser.Tilemaps.Tile, enemy: Phaser.GameObjects.GameObject | Phaser.Tilemaps.Tile): void {
     if (this.isGameOver) return;
-    
+
     const dogBody = this.dog.body as Phaser.Physics.Arcade.Body;
     const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
     const dogBottom = this.dog.y + this.dog.displayHeight / 2;
@@ -141,15 +205,15 @@ class GameScene extends Phaser.Scene {
     const isAboveEnemy = dogCenter < enemyTop;
 
     if (isAboveEnemy) {
-        console.log('Destruyendo enemigo');
-        enemySprite.destroy();
-        dogBody.setVelocityY(this.JUMP_FORCE * 0.7);
-        this.cameras.main.shake(200, 0.01);
+      console.log('Destruyendo enemigo');
+      enemySprite.destroy();
+      dogBody.setVelocityY(this.JUMP_FORCE * 0.7);
+      this.cameras.main.shake(200, 0.01);
     } else {
-        console.log('Game Over - Colisión lateral');
-        console.log('dogCenter:', dogCenter);
-        console.log('enemyTop:', enemyTop);
-        this.gameOver();
+      console.log('Game Over - Colisión lateral');
+      console.log('dogCenter:', dogCenter);
+      console.log('enemyTop:', enemyTop);
+      this.gameOver();
     }
   }
 
@@ -157,26 +221,26 @@ class GameScene extends Phaser.Scene {
   private createEnemies(map: Phaser.Tilemaps.Tilemap): void {
     const enemiesLayer = map.getObjectLayer('enemies');
     this.enemies = this.physics.add.group({
-        runChildUpdate: true
+      runChildUpdate: true
     });
 
     if (enemiesLayer && enemiesLayer.objects) {
-        enemiesLayer.objects.forEach(enemyObj => {
-            if (enemyObj.x !== undefined && enemyObj.y !== undefined) {
-                // Crear el enemigo directamente
-                const enemy = new Enemy(this, enemyObj.x, enemyObj.y);
-                
-                // Añadirlo al grupo
-                this.enemies.add(enemy);
-                
-                console.log('Enemigo creado en:', enemyObj.x, enemyObj.y);
-            }
-        });
+      enemiesLayer.objects.forEach(enemyObj => {
+        if (enemyObj.x !== undefined && enemyObj.y !== undefined) {
+          // Crear el enemigo directamente
+          const enemy = new Enemy(this, enemyObj.x, enemyObj.y);
+
+          // Añadirlo al grupo
+          this.enemies.add(enemy);
+
+          console.log('Enemigo creado en:', enemyObj.x, enemyObj.y);
+        }
+      });
     }
 
     // Debug: mostrar cuántos enemigos se crearon
     console.log('Total enemigos creados:', this.enemies.getChildren().length);
-}
+  }
 
 
 
@@ -415,16 +479,16 @@ class GameScene extends Phaser.Scene {
   private createJoystick(): void {
     const uiLayer = this.add.container(0, 0);
     uiLayer.setScrollFactor(0);
-   
+
     this.base = this.add.arc(0, 0, this.JOYSTICK_RADIUS, 0, 360, false, 0x808080, 0.7);
     this.base.setStrokeStyle(3, 0x4d4d4d);
     this.base.setAlpha(0);
-    
-    this.stick = this.add.arc(0, 0, this.JOYSTICK_RADIUS / 2, 0, 360, false, 0x666666, 0.8); 
+
+    this.stick = this.add.arc(0, 0, this.JOYSTICK_RADIUS / 2, 0, 360, false, 0x666666, 0.8);
     this.stick.setStrokeStyle(3, 0x4d4d4d);
     this.stick.setAlpha(0);
     uiLayer.add(this.base)
-   }
+  }
 
   private createJumpButton(): void {
     // Crear un contenedor para el botón que estará fijo a la cámara
@@ -486,6 +550,7 @@ class GameScene extends Phaser.Scene {
   }
 
   override update(): void {
+
     const dogBody = this.dog.body as Phaser.Physics.Arcade.Body;
 
     // Habilitar colisiones con los límites del mundo
@@ -510,7 +575,7 @@ class GameScene extends Phaser.Scene {
           dogBody.setVelocityX(speed * 50);
           this.dog.setFlipX(false);
         }
-        
+
         // Solo cambiar la animación si no está saltando
         if (!this.isJumping) {
           this.dog.play('walk', true);
@@ -553,7 +618,7 @@ class GameScene extends Phaser.Scene {
         strokeThickness: 6
       }
     ).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-  
+
     this.time.delayedCall(1000, () => {
       this.scene.restart();
     });
@@ -566,11 +631,23 @@ class GameScene extends Phaser.Scene {
   imports: [IonButton, IonIcon, CommonModule],
   template: `
     <ion-button (click)="goBack()" class="back-button">
-        <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
-        </ion-button>
+      <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
+    </ion-button>
     <div id="game"></div>
   `,
   styles: [`
+    :host {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+    }
+
     #game {
       width: 100vw;
       height: 100vh;
@@ -578,32 +655,48 @@ class GameScene extends Phaser.Scene {
       padding: 0;
       touch-action: none;
       background-color: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
     .back-button {
-        position: absolute;
-        left: 10px; 
-        top: 10px;  
-        z-index: 10; 
+      position: fixed;
+      left: 10px; 
+      top: env(safe-area-inset-top, 10px);  
+      z-index: 10; 
+    }
+
+    ::ng-deep canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
   `]
 })
 export class GameComponent implements OnInit, OnDestroy {
   private game!: Phaser.Game;
-  constructor(private navCtrl: NavController){
+  constructor(private navCtrl: NavController) {
     addIcons({ play });
   }
   ngOnInit() {
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#000000',
       scene: GameScene,
       parent: 'game',
+      callbacks: {
+        preBoot: (game) => {
+          // Asegurarnos de que WebGL está disponible
+          if (game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+            // El pipeline se registrará en la escena create()
+            console.log('WebGL disponible para efectos de agua');
+          }
+        }
+      },
       physics: {
         default: 'arcade',
         arcade: {
@@ -616,16 +709,26 @@ export class GameComponent implements OnInit, OnDestroy {
       },
       pixelArt: true,
       scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: window.innerWidth,
         height: window.innerHeight,
         parent: 'game',
+        expandParent: true,
+        min: {
+          width: 0,
+          height: 0
+        },
+        max: {
+          width: 9999,
+          height: 9999
+        }
       }
     };
 
     this.game = new Phaser.Game(config);
   }
+
 
   goBack() {
     this.navCtrl.back();

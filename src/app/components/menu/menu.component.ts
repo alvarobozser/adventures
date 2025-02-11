@@ -4,7 +4,8 @@ import { IonContent, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { addIcons } from 'ionicons';
 import { play, settings, trophy } from 'ionicons/icons';
-
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 @Component({
   selector: 'app-menu',
   standalone: true,
@@ -82,7 +83,25 @@ import { play, settings, trophy } from 'ionicons/icons';
 })
 export class MenuComponent {
   constructor(private router: Router) {
+    this.initializeApp();
     addIcons({ play, settings, trophy });
+  }
+
+  async initializeApp() {
+    try {
+      if (Capacitor.getPlatform() === 'android') {
+        // Configurar StatusBar
+        await StatusBar.setOverlaysWebView({ overlay: true });
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.hide();
+
+        // Poner la app en modo inmersivo
+        const el = document.documentElement;
+        el.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn('Error:', err);
+    }
   }
 
   startGame() {
