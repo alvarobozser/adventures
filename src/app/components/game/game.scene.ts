@@ -6,6 +6,7 @@ import { NavController } from '@ionic/angular';
 import Phaser from 'phaser';
 import { addIcons } from 'ionicons';
 import { play } from 'ionicons/icons';
+import { Enemy } from './enemy';
 
 class GameScene extends Phaser.Scene {
   private dog!: Phaser.GameObjects.Sprite;
@@ -19,13 +20,15 @@ class GameScene extends Phaser.Scene {
   private scoreText!: Phaser.GameObjects.Text;
   private tokensBeingCollected!: Set<Phaser.Physics.Arcade.Sprite>;
   private deathY: number = 0;
+  private enemies!: Phaser.Physics.Arcade.Group;
+  private isGameOver: boolean = false;
 
   private isJoystickActive: boolean = false;
   private isJumping: boolean = false;
   private readonly JOYSTICK_RADIUS = 30;
-  private readonly MAX_SPEED = 5;
+  private readonly MAX_SPEED = 4;
   private readonly MIN_SPEED = 2;
-  private readonly JUMP_FORCE = -200;
+  private readonly JUMP_FORCE = -300;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -40,6 +43,7 @@ class GameScene extends Phaser.Scene {
 
     this.load.image('tiles', 'assets/tiles.png');
     this.load.image('token', 'assets/token.png');
+    this.load.image('enemy', 'assets/enemy.png'); 
     this.load.tilemapTiledJSON('map', 'assets/level.json');
   }
 
@@ -70,10 +74,12 @@ class GameScene extends Phaser.Scene {
 
     const tileset = map.addTilesetImage('tiles', 'tiles');
     const layer = map.createLayer('toplayer', tileset!, 0, 33);
+    const layer1 = map.createLayer('water', tileset!, 0, 33);
     const tokensLayer = map.getObjectLayer('tokens');
     layer!.setCollisionByExclusion([-1]); // Esto hace que todos los tiles excepto el vacío (-1) sean sólidos
-
+    
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.physics.world.setBoundsCollision(true, true, true, false); // left, right, top, bottom
 
     background.setDisplaySize(map.widthInPixels, map.heightInPixels);
 
@@ -98,7 +104,17 @@ class GameScene extends Phaser.Scene {
 
     this.createAnimations();
     this.tokensCreate(tokensLayer);
-
+    this.createEnemies(map);
+    
+    this.physics.add.collider(this.enemies, layer!);
+    
+    this.physics.add.collider(
+      this.dog,
+      this.enemies,
+      this.handleEnemyCollision as unknown as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback,
+      undefined,
+      this
+  );
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.dog, true, 0.08, 0.08); // Los números son el lerp (suavizado)
@@ -111,8 +127,57 @@ class GameScene extends Phaser.Scene {
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
       this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     });
-
+    
   }
+  
+  private handleEnemyCollision(dog: Phaser.GameObjects.GameObject | Phaser.Tilemaps.Tile, enemy: Phaser.GameObjects.GameObject | Phaser.Tilemaps.Tile): void {
+    if (this.isGameOver) return;
+    
+    const dogBody = this.dog.body as Phaser.Physics.Arcade.Body;
+    const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
+    const dogBottom = this.dog.y + this.dog.displayHeight / 2;
+    const dogCenter = this.dog.y;
+    const enemyTop = enemySprite.y - enemySprite.displayHeight / 2;
+    const isAboveEnemy = dogCenter < enemyTop;
+
+    if (isAboveEnemy) {
+        console.log('Destruyendo enemigo');
+        enemySprite.destroy();
+        dogBody.setVelocityY(this.JUMP_FORCE * 0.7);
+        this.cameras.main.shake(200, 0.01);
+    } else {
+        console.log('Game Over - Colisión lateral');
+        console.log('dogCenter:', dogCenter);
+        console.log('enemyTop:', enemyTop);
+        this.gameOver();
+    }
+  }
+
+
+  private createEnemies(map: Phaser.Tilemaps.Tilemap): void {
+    const enemiesLayer = map.getObjectLayer('enemies');
+    this.enemies = this.physics.add.group({
+        runChildUpdate: true
+    });
+
+    if (enemiesLayer && enemiesLayer.objects) {
+        enemiesLayer.objects.forEach(enemyObj => {
+            if (enemyObj.x !== undefined && enemyObj.y !== undefined) {
+                // Crear el enemigo directamente
+                const enemy = new Enemy(this, enemyObj.x, enemyObj.y);
+                
+                // Añadirlo al grupo
+                this.enemies.add(enemy);
+                
+                console.log('Enemigo creado en:', enemyObj.x, enemyObj.y);
+            }
+        });
+    }
+
+    // Debug: mostrar cuántos enemigos se crearon
+    console.log('Total enemigos creados:', this.enemies.getChildren().length);
+}
+
 
 
   private tokensCreate(tokensLayer: any) {
@@ -124,9 +189,8 @@ class GameScene extends Phaser.Scene {
           // Configurar el token para colisiones
           token.setOrigin(0, 0);
           token.setSize(token.width, token.height);
-          token.setOffset(0, 0);
           token.setImmovable(true);
-
+          token.setDisplaySize(32, 32);
           // Añadir al grupo de tokens
           this.tokens.add(token);
 
@@ -422,6 +486,11 @@ class GameScene extends Phaser.Scene {
   }
 
   override update(): void {
+    const dogBody = this.dog.body as Phaser.Physics.Arcade.Body;
+
+    // Habilitar colisiones con los límites del mundo
+    dogBody.setCollideWorldBounds(true);
+    // Movimiento horizontal
     if (this.isJoystickActive) {
       const distanceX = this.stick.x - this.baseCenter.x;
       const maxDistance = this.JOYSTICK_RADIUS;
@@ -433,20 +502,32 @@ class GameScene extends Phaser.Scene {
       );
 
       if (Math.abs(distanceX) > 5) {
+        // Usar setVelocityX en lugar de modificar directamente x
         if (distanceX < 0) {
-          this.dog.x -= speed;
+          dogBody.setVelocityX(-speed * 50); // Multiplicamos por 100 para hacer el movimiento más fluido
+          this.dog.setFlipX(true);
         } else {
-          this.dog.x += speed;
+          dogBody.setVelocityX(speed * 50);
+          this.dog.setFlipX(false);
         }
+        
+        // Solo cambiar la animación si no está saltando
+        if (!this.isJumping) {
+          this.dog.play('walk', true);
+        }
+      } else {
+        dogBody.setVelocityX(0);
       }
+    } else {
+      // Si no hay joystick activo, detener el movimiento horizontal
+      dogBody.setVelocityX(0);
     }
 
     // Actualizar estado de salto y animaciones
-    const dogBody = this.dog.body as Phaser.Physics.Arcade.Body;
     if (dogBody.touching.down || dogBody.blocked.down) {
       if (this.isJumping) {
         this.isJumping = false;
-        if (this.isJoystickActive && Math.abs(this.stick.x - this.baseCenter.x) > 10) {
+        if (this.isJoystickActive && Math.abs(this.stick.x - this.baseCenter.x) > 5) {
           this.dog.play('walk', true);
         } else {
           this.dog.setTexture('dog-idle');
@@ -473,7 +554,7 @@ class GameScene extends Phaser.Scene {
       }
     ).setOrigin(0.5).setScrollFactor(0).setDepth(100);
   
-    this.time.delayedCall(2000, () => {
+    this.time.delayedCall(1000, () => {
       this.scene.restart();
     });
   }
