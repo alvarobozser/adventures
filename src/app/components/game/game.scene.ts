@@ -1,14 +1,6 @@
-// game.component.ts
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { IonContent, IonButton, IonIcon } from '@ionic/angular/standalone';
-import { NavController } from '@ionic/angular';
 import Phaser from 'phaser';
-import { addIcons } from 'ionicons';
-import { play } from 'ionicons/icons';
 import { Enemy } from './enemy';
-
-class GameScene extends Phaser.Scene {
+export class GameScene extends Phaser.Scene {
   private dog!: Phaser.GameObjects.Sprite;
   private base!: Phaser.GameObjects.Arc;
   private stick!: Phaser.GameObjects.Arc;
@@ -38,15 +30,16 @@ class GameScene extends Phaser.Scene {
 
 
   preload(): void {
-    this.load.image('background', 'assets/background.jpg');
-    this.load.image('dog-idle', 'assets/spritesheets/dante/dantequit.png');
-    this.load.image('dog-walk', 'assets/spritesheets/dante/dantewalk.png');
-    this.load.image('dog-jump', 'assets/spritesheets/dante/dantejump.png');
+    this.load.image('background', 'assets/menu/background.jpg');
+    this.load.image('dog-idle', 'assets/dante/dantequit.png');
+    this.load.image('dog-walk', 'assets/dante/dantewalk.png');
+    this.load.image('dog-jump', 'assets/dante/dantejump.png');
 
-    this.load.image('tiles', 'assets/tiles.png');
-    this.load.image('token', 'assets/token.png');
-    this.load.image('enemy', 'assets/enemy.png');
-    this.load.tilemapTiledJSON('map', 'assets/level.json');
+    this.load.image('tiles', 'assets/tiles/tiles.png');
+    this.load.image('token', 'assets/tiles/token.png');
+    this.load.image('enemy', 'assets/enemy/enemy.png');
+    this.load.image('enemy1', 'assets/enemy/enemy1.png');
+    this.load.tilemapTiledJSON('map', 'assets/levels/level.json');
   }
 
   create(): void {
@@ -68,7 +61,7 @@ class GameScene extends Phaser.Scene {
     background.x = 0;
     background.y = 0;
 
-    const map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
+    const map = this.make.tilemap({ key: 'map'});
 
     this.tokens = this.physics.add.group({
       allowGravity: false,
@@ -205,14 +198,10 @@ class GameScene extends Phaser.Scene {
     const isAboveEnemy = dogCenter < enemyTop;
 
     if (isAboveEnemy) {
-      console.log('Destruyendo enemigo');
       enemySprite.destroy();
       dogBody.setVelocityY(this.JUMP_FORCE * 0.7);
       this.cameras.main.shake(200, 0.01);
     } else {
-      console.log('Game Over - Colisión lateral');
-      console.log('dogCenter:', dogCenter);
-      console.log('enemyTop:', enemyTop);
       this.gameOver();
     }
   }
@@ -232,14 +221,9 @@ class GameScene extends Phaser.Scene {
 
           // Añadirlo al grupo
           this.enemies.add(enemy);
-
-          console.log('Enemigo creado en:', enemyObj.x, enemyObj.y);
         }
       });
     }
-
-    // Debug: mostrar cuántos enemigos se crearon
-    console.log('Total enemigos creados:', this.enemies.getChildren().length);
   }
 
 
@@ -257,14 +241,11 @@ class GameScene extends Phaser.Scene {
           token.setDisplaySize(32, 32);
           // Añadir al grupo de tokens
           this.tokens.add(token);
-
-          console.log('Token creado en:', obj.x, obj.y);
         }
       });
 
       // Verificar que el perro existe antes de configurar colisiones
       if (this.dog) {
-        console.log('Configurando overlap para el perro en:', this.dog.x, this.dog.y);
 
         // Asegurarse de que el perro tiene física
         this.physics.world.enable(this.dog);
@@ -276,15 +257,11 @@ class GameScene extends Phaser.Scene {
           this.dog,
           this.tokens,
           (_obj1, _obj2) => {
-            console.log('¡Colisión detectada!');
             const token = _obj2 as Phaser.Physics.Arcade.Sprite;
 
             if (this.tokensBeingCollected.has(token)) {
               return;
             }
-
-            console.log('¡Colisión detectada!');
-
             // Añadir el token al conjunto de tokens siendo recolectados
             this.tokensBeingCollected.add(token);
 
@@ -301,8 +278,7 @@ class GameScene extends Phaser.Scene {
               onComplete: () => {
                 token.disableBody(true, true);
                 this.score += 1;
-                this.scoreText.setText('hotDogs: ' + this.score);
-                console.log('Puntuación actualizada:', this.score);
+                this.scoreText.setText('Puntos: ' + this.score);
 
                 if (this.tokens.countActive() === 0) {
                   this.onAllTokensCollected();
@@ -383,7 +359,7 @@ class GameScene extends Phaser.Scene {
     const completedText = this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
-      'Level \nComplete!',
+      'Fase \nCompletada!',
       {
         fontSize: '64px',
         fontFamily: 'Comic Sans MS',
@@ -452,7 +428,7 @@ class GameScene extends Phaser.Scene {
   }
 
   private textInicializer() {
-    this.scoreText = this.add.text(16, 16, 'hotDogs: 0', {
+    this.scoreText = this.add.text(16, 16, 'Puntos: 0', {
       fontSize: '32px',
       fontFamily: 'Comic Sans MS', // Cambia por "Press Start 2P" si tienes una fuente más arcade
       color: '#FFD700', // Amarillo dorado estilo Mario
@@ -622,121 +598,5 @@ class GameScene extends Phaser.Scene {
     this.time.delayedCall(1000, () => {
       this.scene.restart();
     });
-  }
-}
-
-@Component({
-  selector: 'app-game',
-  standalone: true,
-  imports: [IonButton, IonIcon, CommonModule],
-  template: `
-    <ion-button (click)="goBack()" class="back-button">
-      <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
-    </ion-button>
-    <div id="game"></div>
-  `,
-  styles: [`
-    :host {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      position: fixed;
-      top: 0;
-      left: 0;
-      overflow: hidden;
-    }
-
-    #game {
-      width: 100vw;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      touch-action: none;
-      background-color: #000;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-    }
-
-    .back-button {
-      position: fixed;
-      left: 10px; 
-      top: env(safe-area-inset-top, 10px);  
-      z-index: 10; 
-    }
-
-    ::ng-deep canvas {
-      width: 100vw !important;
-      height: 100vh !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-  `]
-})
-export class GameComponent implements OnInit, OnDestroy {
-  private game!: Phaser.Game;
-  constructor(private navCtrl: NavController) {
-    addIcons({ play });
-  }
-  ngOnInit() {
-    const config: Phaser.Types.Core.GameConfig = {
-      type: Phaser.AUTO,
-      backgroundColor: '#000000',
-      scene: GameScene,
-      parent: 'game',
-      callbacks: {
-        preBoot: (game) => {
-          // Asegurarnos de que WebGL está disponible
-          if (game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-            // El pipeline se registrará en la escena create()
-            console.log('WebGL disponible para efectos de agua');
-          }
-        }
-      },
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: {
-            y: 600,
-            x: 0
-          },
-          debug: false
-        }
-      },
-      pixelArt: true,
-      scale: {
-        mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        parent: 'game',
-        expandParent: true,
-        min: {
-          width: 0,
-          height: 0
-        },
-        max: {
-          width: 9999,
-          height: 9999
-        }
-      }
-    };
-
-    this.game = new Phaser.Game(config);
-  }
-
-
-  goBack() {
-    this.navCtrl.back();
-  }
-
-  ngOnDestroy() {
-    if (this.game) {
-      this.game.destroy(true);
-    }
   }
 }

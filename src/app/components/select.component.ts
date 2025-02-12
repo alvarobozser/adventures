@@ -15,7 +15,7 @@ import { NavController } from '@ionic/angular';
       .game-menu {
       width: 100vw;
       height: 100vh;
-      background: url('/assets/backmenu.webp') no-repeat center/cover;
+      background: url('/assets/menu/backmenu.webp') no-repeat center/cover;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -138,17 +138,17 @@ import { NavController } from '@ionic/angular';
         <ion-button (click)="goBack()" class="back-button">
         <ion-icon name="play" style="transform: scaleX(-1);"></ion-icon>
         </ion-button>
-        <img src="/assets/ttile.webp" alt="" height="250px" width="250px" style="margin-bottom: 20%;">
+        <img src="/assets/menu/ttile.webp" alt="" height="250px" width="250px" style="margin-bottom: 20%;">
         <div class="character-container">
         <div class="character-card" (click)="startGame()">
-          <img src="/assets/danteSelect.png" alt="Dante" class="character-image">
+          <img src="/assets/dante/danteSelect.png" alt="Dante" class="character-image">
           <div class="character-info">
             <h3>Dante</h3>
             <p>Un guerrero perruno con habilidades inigualables. ¡Elige a Dante y empieza tu aventura!</p>
           </div>
         </div>
         <div class="character-card">
-          <img src="/assets/ttile.webp" alt="Otro Personaje" class="character-image">
+          <img src="/assets/menu/ttile.webp" alt="Otro Personaje" class="character-image">
           <div class="character-info">
             <h3>Otro Personaje</h3>
             <p>Una descripción breve de otro personaje.</p>
@@ -159,6 +159,7 @@ import { NavController } from '@ionic/angular';
     </ion-content>
   `
 })
+
 export class SelectComponent {
   constructor(private router: Router, private navCtrl: NavController) {
     addIcons({ play });

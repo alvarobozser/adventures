@@ -17,7 +17,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         // Ajustamos el tamaño y offset del hitbox
         body.setCollideWorldBounds(true);
         body.setSize(15, 15);
-        body.setOffset(4, 0); // Pequeño ajuste en X para centrar mejor
+        body.setOffset(4, 4); // Pequeño ajuste en X para centrar mejor
         body.setAllowGravity(true);
         body.setBounce(0);
         body.setFriction(1, 0);
@@ -25,6 +25,21 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         
         // Ajustamos el tamaño visual para que coincida mejor con el hitbox
         this.setDisplaySize(40, 40);
+
+        if (!scene.anims.exists('enemy-walk')) {
+            scene.anims.create({
+                key: 'enemy-walk',
+                frames: [
+                    { key: 'enemy'},
+                    { key: 'enemy1'}
+                ],
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+
+        // Iniciar la animación
+        this.play('enemy-walk');
         
         this.startPatrol();
     }
@@ -65,7 +80,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         }
 
         // Verificar si se ha caído del mapa
-        if (this.y > 1000) { // Ajusta este valor según tu mapa
+        if (this.y > 1000) { 
             this.destroy();
         }
     }

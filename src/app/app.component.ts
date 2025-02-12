@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
-import { MenuComponent } from './components/menu/menu.component';
+import { MenuComponent } from './components/menu.component';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 
 @Component({

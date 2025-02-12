@@ -13,9 +13,6 @@ const config: CapacitorConfig = {
       overlaysWebView: true
     }
   },
-  ios: {
-    contentInset: 'always'
-  },
   android: {
     backgroundColor: "#000000"
   }

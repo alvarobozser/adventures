@@ -14,7 +14,7 @@ import { Capacitor } from '@capacitor/core';
     .game-menu {
     width: 100vw;
     height: 100vh;
-    background: url('/assets/backmenu.webp') no-repeat center/cover;
+    background: url('/assets/menu/backmenu.webp') no-repeat center/cover;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -73,7 +73,7 @@ import { Capacitor } from '@capacitor/core';
   template: `
     <ion-content>
       <div class="game-menu">
-        <img src="/assets/ttile.webp" alt="" height="250px" width="250px">
+        <img src="/assets/menu/ttile.webp" alt="" height="250px" width="250px">
         <ion-button class="menu-button" (click)="startGame()">
           <ion-icon slot="start" name="play"></ion-icon>Comenzar
         </ion-button>
