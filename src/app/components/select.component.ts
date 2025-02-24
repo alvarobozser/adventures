@@ -115,8 +115,8 @@ import { NavController } from '@ionic/angular';
 
       .character-image {
         width: 100px;
-        height: 100px;
-        border-radius: 50%;
+        height: 85px;
+        border-radius: 25%;
         margin-bottom: 10px;
       }
 
@@ -148,10 +148,10 @@ import { NavController } from '@ionic/angular';
           </div>
         </div>
         <div class="character-card">
-          <img src="/assets/menu/ttile.webp" alt="Otro Personaje" class="character-image">
+          <img src="/assets/moira/moiraStart.png" alt="Otro Personaje" class="character-image">
           <div class="character-info">
-            <h3>Otro Personaje</h3>
-            <p>Una descripción breve de otro personaje.</p>
+            <h3>Moira</h3>
+            <p>Una guardiana con habilidades extraordinarias. ¡Elige a Moira y comienza tu aventura!</p>
           </div>
         </div>
       </div>

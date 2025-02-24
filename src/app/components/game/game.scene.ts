@@ -14,7 +14,6 @@ export class GameScene extends Phaser.Scene {
   private deathY: number = 0;
   private enemies!: Phaser.Physics.Arcade.Group;
   private isGameOver: boolean = false;
-  private waterLayer?: Phaser.Tilemaps.TilemapLayer;
 
   private isJoystickActive: boolean = false;
   private isJumping: boolean = false;
@@ -49,15 +48,13 @@ export class GameScene extends Phaser.Scene {
 
 
     const background = this.add.image(0, 0, 'background')
-      .setOrigin(0, 0)
-      .setDepth(-1)
-      .setScrollFactor(0);
+    .setOrigin(0, 0)
+    .setDepth(-1)
+    .setScrollFactor(0);
+    
+    const scale = this.cameras.main.height / background.height;
 
-    // Asegurar que el background cubra toda la pantalla
-    const scaleX = this.cameras.main.width / background.width;
-    const scaleY = this.cameras.main.height / background.height;
-    const scale = Math.max(scaleX, scaleY);
-    background.setScale(scale).setScrollFactor(0);
+    background.setScale(scale);
     background.x = 0;
     background.y = 0;
 
@@ -72,12 +69,13 @@ export class GameScene extends Phaser.Scene {
     const tileset = map.addTilesetImage('tiles', 'tiles');
     const layer = map.createLayer('toplayer', tileset!, 0, 33);
     const layer1 = map.createLayer('water', tileset!, 0, 33);
+    const layer2 = map.createLayer('finish', tileset!, 0, 33);
 
     this.waterStyles(layer1);
 
     const tokensLayer = map.getObjectLayer('tokens');
     layer!.setCollisionByExclusion([-1]); // Esto hace que todos los tiles excepto el vacío (-1) sean sólidos
-
+    layer2!.setCollisionByExclusion([-1]);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBoundsCollision(true, true, true, false); // left, right, top, bottom
 
@@ -101,6 +99,7 @@ export class GameScene extends Phaser.Scene {
 
     // Añadir el collider y hacerlo más restrictivo
     this.physics.add.collider(this.dog, layer!, undefined, undefined, this);
+    this.physics.add.collider(this.dog, layer2!, undefined, undefined, this);
 
     this.createAnimations();
     this.tokensCreate(tokensLayer);
@@ -127,7 +126,6 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
       this.cameras.main.setViewport(0, 0, gameSize.width, gameSize.height);
     });
-
   }
 
   private waterStyles(layer1:any){
@@ -225,8 +223,6 @@ export class GameScene extends Phaser.Scene {
       });
     }
   }
-
-
 
   private tokensCreate(tokensLayer: any) {
     if (tokensLayer && tokensLayer.objects) {

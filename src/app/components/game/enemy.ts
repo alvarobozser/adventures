@@ -1,5 +1,5 @@
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
-    private moveSpeed: number = 100;
+    private moveSpeed: number = 80;
     private direction: number = 1;
     private moveDistance: number = 200;
     private startX: number;
@@ -16,7 +16,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         
         // Ajustamos el tamaño y offset del hitbox
         body.setCollideWorldBounds(true);
-        body.setSize(15, 15);
+        body.setSize(56, 56);
         body.setOffset(4, 4); // Pequeño ajuste en X para centrar mejor
         body.setAllowGravity(true);
         body.setBounce(0);
@@ -24,7 +24,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         body.setImmovable(false);
         
         // Ajustamos el tamaño visual para que coincida mejor con el hitbox
-        this.setDisplaySize(40, 40);
+        this.setDisplaySize(70, 70);
 
         if (!scene.anims.exists('enemy-walk')) {
             scene.anims.create({
